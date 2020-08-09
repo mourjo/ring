@@ -9,6 +9,7 @@ that includes the following additional changes:
 
 1. Support for a timeout handler that can be passed to the Jetty adapter
 2. Tracking request ingestion time in the request map from Jetty
+3. Expose the Jetty request queue to the creator of the Server
 
 The [SPEC][1] file at the root of this distribution provides a
 complete description of the Ring interface.

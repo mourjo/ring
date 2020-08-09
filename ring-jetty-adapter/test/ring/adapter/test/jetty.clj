@@ -35,8 +35,12 @@
 (defn- all-threads []
   (.keySet (Thread/getAllStackTraces)))
 
+(defn- run-jetty-server
+  [app options]
+  (:server (run-jetty app options)))
+
 (defmacro with-server [app options & body]
-  `(let [server# (run-jetty ~app ~(assoc options :join? false))]
+  `(let [server# (run-jetty-server ~app ~(assoc options :join? false))]
      (try
        ~@body
        (finally (.stop server#)))))
@@ -164,8 +168,8 @@
           configurator (fn [server]
                          (.setMaxThreads (.getThreadPool server) max-threads)
                          (.setHandler server new-handler))
-          server (run-jetty hello-world
-                            {:join? false :port test-port :configurator configurator})]
+          server (run-jetty-server hello-world
+                                   {:join? false :port test-port :configurator configurator})]
       (is (= (.getMaxThreads (.getThreadPool server)) max-threads))
       (is (identical? new-handler (.getHandler server)))
       (is (= 1 (count (.getHandlers server))))
@@ -173,67 +177,67 @@
 
   (testing "setting daemon threads"
     (testing "default (daemon off)"
-      (let [server (run-jetty hello-world {:port test-port :join? false})]
+      (let [server (run-jetty-server hello-world {:port test-port :join? false})]
         (is (not (.. server getThreadPool isDaemon)))
         (.stop server)))
     (testing "daemon on"
-      (let [server (run-jetty hello-world {:port test-port :join? false :daemon? true})]
+      (let [server (run-jetty-server hello-world {:port test-port :join? false :daemon? true})]
         (is (.. server getThreadPool isDaemon))
         (.stop server)))
     (testing "daemon off"
-      (let [server (run-jetty hello-world {:port test-port :join? false :daemon? false})]
+      (let [server (run-jetty-server hello-world {:port test-port :join? false :daemon? false})]
         (is (not (.. server getThreadPool isDaemon)))
         (.stop server))))
 
   (testing "setting max idle timeout"
-    (let [server (run-jetty hello-world {:port test-port
-                                         :ssl-port test-ssl-port
-                                         :keystore "test/keystore.jks"
-                                         :key-password "password"
-                                         :join? false
-                                         :max-idle-time 5000})
+    (let [server (run-jetty-server hello-world {:port test-port
+                                                :ssl-port test-ssl-port
+                                                :keystore "test/keystore.jks"
+                                                :key-password "password"
+                                                :join? false
+                                                :max-idle-time 5000})
           connectors (. server getConnectors)]
       (is (= 5000 (. (first connectors) getIdleTimeout)))
       (is (= 5000 (. (second connectors) getIdleTimeout)))
       (.stop server)))
 
   (testing "using the default max idle time"
-    (let [server (run-jetty hello-world {:port test-port
-                                         :ssl-port test-ssl-port
-                                         :keystore "test/keystore.jks"
-                                         :key-password "password"
-                                         :join? false})
+    (let [server (run-jetty-server hello-world {:port test-port
+                                                :ssl-port test-ssl-port
+                                                :keystore "test/keystore.jks"
+                                                :key-password "password"
+                                                :join? false})
           connectors (. server getConnectors)]
       (is (= 200000 (. (first connectors) getIdleTimeout)))
       (is (= 200000 (. (second connectors) getIdleTimeout)))
       (.stop server)))
 
   (testing "setting min-threads"
-    (let [server (run-jetty hello-world {:port test-port
-                                         :min-threads 3
-                                         :join? false})
+    (let [server (run-jetty-server hello-world {:port test-port
+                                                :min-threads 3
+                                                :join? false})
           thread-pool (. server getThreadPool)]
       (is (= 3 (. thread-pool getMinThreads)))
       (.stop server)))
 
   (testing "default min-threads"
-    (let [server (run-jetty hello-world {:port test-port
-                                         :join? false})
+    (let [server (run-jetty-server hello-world {:port test-port
+                                                :join? false})
           thread-pool (. server getThreadPool)]
       (is (= 8 (. thread-pool getMinThreads)))
       (.stop server)))
 
   (testing "default thread-idle-timeout"
-    (let [server (run-jetty hello-world {:port test-port
-                                         :join? false})
+    (let [server (run-jetty-server hello-world {:port test-port
+                                                :join? false})
           thread-pool (. server getThreadPool)]
       (is (= 60000 (. thread-pool getIdleTimeout)))
       (.stop server)))
 
   (testing "setting thread-idle-timeout"
-    (let [server (run-jetty hello-world {:port test-port
-                                         :join? false
-                                         :thread-idle-timeout 1000})
+    (let [server (run-jetty-server hello-world {:port test-port
+                                                :join? false
+                                                :thread-idle-timeout 1000})
           thread-pool (. server getThreadPool)]
       (is (= 1000 (. thread-pool getIdleTimeout)))
       (.stop server)))
@@ -287,7 +291,7 @@
   (testing "excluding cipher suites"
     (let [cipher  "SSL_RSA_WITH_NULL_MD5"
           options (assoc test-ssl-options :exclude-ciphers [cipher])
-          server  (run-jetty echo-handler options)]
+          server  (run-jetty-server echo-handler options)]
       (try
         (is (contains? (exclude-ciphers server) cipher))
         ;; The operation is additive; it doesn't replace ciphers that Jetty
@@ -301,7 +305,7 @@
           options  (assoc test-ssl-options
                           :exclude-ciphers [cipher]
                           :replace-exclude-ciphers? true)
-          server   (run-jetty echo-handler options)
+          server   (run-jetty-server echo-handler options)
           excludes (exclude-ciphers server)]
       (try
         (is (= (first excludes) cipher))
@@ -312,7 +316,7 @@
   (testing "excluding cipher protocols"
     (let [protocol "SSLv2Hello"
           options  (assoc test-ssl-options :exclude-protocols [protocol])
-          server   (run-jetty echo-handler options)]
+          server   (run-jetty-server echo-handler options)]
       (try
         (is (contains? (exclude-protocols server) protocol))
         ;; The operation is additive; it doesn't replace protocols that Jetty
@@ -326,7 +330,7 @@
           options  (assoc test-ssl-options
                           :exclude-protocols [protocol]
                           :replace-exclude-protocols? true)
-          server   (run-jetty echo-handler options)
+          server   (run-jetty-server echo-handler options)
           excludes (exclude-protocols server)]
       (try
         (is (= (first excludes) protocol))
@@ -339,7 +343,7 @@
     (testing "resource cleanup on exception"
       (with-server hello-world {:port test-port}
         (let [thread-count (count (all-threads))]
-          (is (thrown? Exception (run-jetty hello-world {:port test-port})))
+          (is (thrown? Exception (run-jetty-server hello-world {:port test-port})))
           (loop [i 0]
             (when (and (< i 400) (not= thread-count (count (all-threads))))
               (Thread/sleep 250)
@@ -508,12 +512,12 @@
   (reset! call-count 0)
   (with-server broken-handler {:port test-port}
     (try (http/get test-url)
-      (catch Exception _ nil))
+         (catch Exception _ nil))
     (is (= 1 @call-count))))
 
 (testing "broken async handler is only called once"
   (reset! call-count 0)
   (with-server broken-handler-cps {:async? true :port test-port}
     (try (http/get test-url)
-      (catch Exception _ nil))
+         (catch Exception _ nil))
     (is (= 1 @call-count))))
