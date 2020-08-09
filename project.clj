@@ -1,4 +1,4 @@
-(defproject ring "1.0.0-1.8.1"
+(defproject mourjo/ring "1.0.0-1.8.1"
   :description "A Clojure web applications library."
   :url "https://github.com/mourjo/ring"
   :license {:name "The MIT License"
