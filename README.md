@@ -1,17 +1,19 @@
 # Ring
 
-[![Build Status](https://travis-ci.org/ring-clojure/ring.svg?branch=master)](https://travis-ci.org/ring-clojure/ring)
-
 Ring is a Clojure web applications library inspired by Python's WSGI
 and Ruby's Rack. By abstracting the details of HTTP into a simple,
 unified API, Ring allows web applications to be constructed of modular
 components that can be shared among a variety of applications, web
-servers, and web frameworks.
+servers, and web frameworks. This is a forked version of Ring from 1.8.1
+that includes the following additional changes:
+
+1. Support for a timeout handler that can be passed to the Jetty adapter
+2. Tracking request ingestion time in the request map from Jetty
 
 The [SPEC][1] file at the root of this distribution provides a
 complete description of the Ring interface.
 
-[1]: https://github.com/ring-clojure/ring/blob/master/SPEC
+[1]: https://github.com/mourjo/ring/blob/master/SPEC
 
 ## Upgrade Notice
 
@@ -19,7 +21,7 @@ From version 1.2.1 onward, the ring/ring-core package no longer comes
 with the `javax.servlet/servlet-api` package as a dependency (see
 issue [#89][2]).
 
-If you are using the `ring/ring-core` namespace on its own, you may
+If you are using the `mourjo/ring-core` namespace on its own, you may
 run into errors when executing tests or running alternative adapters.
 To resolve this, include the following dependency in your dev profile:
 
@@ -39,11 +41,11 @@ To resolve this, include the following dependency in your dev profile:
 To include one of the above libraries, for example `ring-core`, add
 the following to your `:dependencies`:
 
-    [ring/ring-core "1.8.1"]
+    [mourjo/ring-core "1.0.0-1.8.1"]
 
 To include all of them:
 
-    [ring "1.8.1"]
+    [mourjo/ring "1.0.0-1.8.1"]
 
 ## Documentation
 
@@ -58,7 +60,7 @@ To include all of them:
 
 Please see [CONTRIBUTING.md][3].
 
-[3]: https://github.com/ring-clojure/ring/blob/master/CONTRIBUTING.md
+[3]: https://github.com/mourjo/ring/blob/master/CONTRIBUTING.md
 
 ## Thanks
 

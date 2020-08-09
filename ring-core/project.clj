@@ -1,11 +1,11 @@
-(defproject ring/ring-core "1.8.1"
+(defproject mourjo/ring-core "1.0.0-1.8.1"
   :description "Ring core libraries."
   :url "https://github.com/ring-clojure/ring"
   :scm {:dir ".."}
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [ring/ring-codec "1.1.2"]
+                 [mourjo/ring-codec "1.1.2"]
                  [commons-io "2.6"]
                  [commons-fileupload "1.4"]
                  [crypto-random "1.2.0"]
