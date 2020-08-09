@@ -19,11 +19,16 @@
            [javax.servlet AsyncContext DispatcherType AsyncEvent AsyncListener]
            [javax.servlet.http HttpServletRequest HttpServletResponse]))
 
+(defn- build-request-map
+  [^Request base-request ^HttpServletRequest request]
+  (assoc (servlet/build-request-map request)
+         :request-ts-millis (.getTimeStamp base-request)))
+
 (defn- ^AbstractHandler proxy-handler [handler]
   (proxy [AbstractHandler] []
     (handle [_ ^Request base-request ^HttpServletRequest request response]
       (when-not (= (.getDispatcherType request) DispatcherType/ERROR)
-        (let [request-map  (servlet/build-request-map request)
+        (let [request-map  (build-request-map base-request request)
               response-map (handler request-map)]
           (servlet/update-servlet-response response response-map)
           (.setHandled base-request true))))))
@@ -37,10 +42,10 @@
   (fn [response-map]
     (servlet/update-servlet-response response context response-map)))
 
-(defn- async-timeout-listener [request context response handler]
+(defn- async-timeout-listener [base-request request context response handler]
   (proxy [AsyncListener] []
     (onTimeout [^AsyncEvent _]
-      (handler (servlet/build-request-map request)
+      (handler (build-request-map base-request request)
                (async-jetty-respond context response)
                (async-jetty-raise context response)))
     (onComplete [^AsyncEvent _])
@@ -55,9 +60,13 @@
         (when timeout-handler
           (.addListener
            context
-           (async-timeout-listener request context response timeout-handler)))
+           (async-timeout-listener base-request
+                                   request
+                                   context
+                                   response
+                                   timeout-handler)))
         (handler
-         (servlet/build-request-map request)
+         (build-request-map base-request request)
          (async-jetty-respond context response)
          (async-jetty-raise context response))
         (.setHandled base-request true)))))
